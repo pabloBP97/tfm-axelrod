@@ -1,0 +1,24 @@
+# Dependencias para servir la API (imagen Docker).
+# Versiones fijadas iguales a uv.lock: los modelos .joblib exigen la misma
+# versión de scikit-learn con la que se guardaron.
+#
+# `import axelrod` carga torch, dask, scipy y matplotlib, así que son
+# obligatorias. torch se instala aparte, en su variante solo-CPU (ver
+# Dockerfile), para no arrastrar varios GB de CUDA.
+axelrod==4.14.0
+fastapi==0.163.1
+joblib==1.6.0
+numpy==2.5.5
+pandas==3.1.1
+pydantic==2.14.3
+scikit-learn==1.9.1
+uvicorn==0.54.0
+# Dependencias de axelrod
+cloudpickle==3.1.2
+dask==2026.8.0
+fsspec==2026.9.0
+matplotlib==3.11.2
+pyyaml==6.0.3
+scipy==1.18.1
+toolz==1.2.0
+tqdm==4.70.1

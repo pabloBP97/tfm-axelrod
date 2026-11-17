@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dilema del prisionero</title>
+<link rel="icon" href="data:,">
+<style>
+  :root {
+    --bg: #fcfcfb; --panel: #ffffff; --ink: #0b0b0b; --ink2: #52514e; --muted: #898781;
+    --line: #e1e0d9; --axis: #c3c2b7;
+    --you: #2a78d6; --ai: #eb6834; --coop: #1baf7a; --def: #e34948;
+    --coop-bg: #e3f6ee; --def-bg: #fce8e8; --bar-bg: #eeede8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141413; --panel: #1d1d1b; --ink: #f2f1ed; --ink2: #c3c2b7; --muted: #898781;
+      --line: #33332f; --axis: #52514e;
+      --you: #5b9be6; --ai: #f08a5d; --coop: #3cc794; --def: #f06b6a;
+      --coop-bg: #16352a; --def-bg: #3d1f1f; --bar-bg: #2a2a27;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 960px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 1.6rem; margin: 0 0 4px; }
+  h2 { font-size: 1.05rem; margin: 0 0 12px; }
+  p.lead { color: var(--ink2); margin: 0 0 20px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 18px; margin-bottom: 16px;
+  }
+  .hidden { display: none !important; }
+  .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  label { color: var(--ink2); }
+  input[type=range] { width: 220px; max-width: 100%; accent-color: var(--you); }
+  button {
+    font: inherit; font-weight: 600; border-radius: 10px; border: 1px solid var(--axis);
+    background: var(--panel); color: var(--ink); padding: 10px 18px; cursor: pointer;
+  }
+  button:disabled { opacity: .5; cursor: wait; }
+  button.primary { background: var(--you); border-color: var(--you); color: #fff; }
+  .moves { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+  .moves button { padding: 18px 12px; font-size: 1.1rem; }
+  .moves .c { background: var(--coop-bg); border-color: var(--coop); color: var(--ink); }
+  .moves .d { background: var(--def-bg); border-color: var(--def); color: var(--ink); }
+  .moves small { display: block; font-weight: 400; color: var(--muted); font-size: .8rem; }
+  .grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 16px; }
+  @media (max-width: 760px) {
+    /* En móvil: marcador, creencia y decisión de la IA, y después el historial. */
+    .grid { display: flex; flex-direction: column; gap: 0; }
+    .col { display: contents; }
+    #historyCard { order: 3; }
+  }
+  .score { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; text-align: center; }
+  .score .who { color: var(--ink2); font-size: .9rem; }
+  .score .pts { font-size: 2.4rem; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .score .you { color: var(--you); } .score .ai { color: var(--ai); }
+  .score .mid { color: var(--muted); font-size: .9rem; padding: 0 8px; }
+  .matrix { font-size: .8rem; color: var(--muted); margin-top: 10px; text-align: center; }
+  .pill {
+    display: inline-block; min-width: 1.9em; text-align: center; font-weight: 700;
+    border-radius: 6px; padding: 0 6px; font-size: .9rem;
+  }
+  .pill.C { background: var(--coop-bg); color: var(--coop); }
+  .pill.D { background: var(--def-bg); color: var(--def); }
+  .history { max-height: 340px; overflow-y: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { padding: 6px 4px; text-align: center; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 500; font-size: .85rem; position: sticky; top: 0; background: var(--panel); }
+  td.mode { font-size: .8rem; color: var(--ink2); text-align: left; }
+  .empty { color: var(--muted); font-size: .9rem; }
+  .belief li { list-style: none; margin-bottom: 10px; }
+  .belief ul { padding: 0; margin: 0; }
+  .belief .name { display: flex; justify-content: space-between; font-size: .95rem; }
+  .bar { height: 8px; border-radius: 4px; background: var(--bar-bg); margin-top: 4px; overflow: hidden; }
+  .bar span { display: block; height: 100%; background: var(--you); border-radius: 4px; }
+  .tag {
+    display: inline-block; font-size: .78rem; border: 1px solid var(--axis); color: var(--ink2);
+    border-radius: 999px; padding: 1px 10px; margin-bottom: 8px;
+  }
+  .explain { color: var(--ink2); font-size: .95rem; margin: 0; }
+  .progress { color: var(--muted); font-size: .9rem; text-align: center; margin-top: 10px; }
+  .summary .big { font-size: 1.3rem; font-weight: 700; margin: 0 0 8px; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 12px 0 16px; }
+  .stat { border: 1px solid var(--line); border-radius: 10px; padding: 10px; }
+  .stat b { display: block; font-size: 1.3rem; font-variant-numeric: tabular-nums; }
+  .stat span { color: var(--muted); font-size: .85rem; }
+  .error { color: var(--def); font-size: .9rem; margin-top: 8px; }
+  kbd { border: 1px solid var(--axis); border-radius: 4px; padding: 0 4px; font-size: .75rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Dilema del prisionero contra una IA</h1>
+  <p class="lead">En cada ronda eliges cooperar o desertar a la vez que la IA. La IA intenta
+    adivinar qué estrategia sigues y responder de la forma que más puntos le dé.</p>
+
+  <section id="setup" class="card">
+    <h2>Nueva partida</h2>
+    <div class="row">
+      <label for="rounds">Número de rondas: <b id="roundsOut">30</b></label>
+      <input id="rounds" type="range" min="10" max="50" step="1" value="30">
+      <button id="start" class="primary">Empezar</button>
+    </div>
+    <p class="matrix">Pagos por ronda (tú / IA): ambos cooperan 3/3 · tú cooperas y la IA deserta 0/5 ·
+      tú desertas y la IA coopera 5/0 · ambos desertan 1/1</p>
+  </section>
+
+  <section id="game" class="hidden">
+    <div class="grid">
+      <div class="col">
+        <div class="card">
+          <div class="score">
+            <div><div class="who">Tú</div><div id="scoreYou" class="pts you">0</div></div>
+            <div class="mid">vs</div>
+            <div><div class="who">IA</div><div id="scoreAi" class="pts ai">0</div></div>
+          </div>
+          <div class="moves">
+            <button id="btnC" class="c">Cooperar <small>tecla <kbd>C</kbd></small></button>
+            <button id="btnD" class="d">Desertar <small>tecla <kbd>D</kbd></small></button>
+          </div>
+          <div id="progress" class="progress"></div>
+          <div id="error" class="error hidden" role="alert"></div>
+        </div>
+        <div class="card" id="historyCard">
+          <h2>Historial</h2>
+          <div class="history">
+            <p id="historyEmpty" class="empty">Aún no se ha jugado ninguna ronda.</p>
+            <table id="historyTable" class="hidden">
+              <thead><tr><th>Ronda</th><th>Tú</th><th>IA</th><th>Puntos</th><th>La IA jugó como</th></tr></thead>
+              <tbody id="historyBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card belief" aria-live="polite">
+          <h2>Lo que la IA cree que eres</h2>
+          <ul id="beliefList"><li class="empty">La IA necesita ver al menos 5 rondas para opinar.</li></ul>
+          <p id="beliefN" class="empty"></p>
+        </div>
+        <div class="card" aria-live="polite">
+          <h2>Decisión de la IA</h2>
+          <span id="mode" class="tag">Sin decidir</span>
+          <p id="explain" class="explain">Elige tu primera jugada.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="summary" class="card summary hidden">
+    <h2>Resumen de la partida</h2>
+    <p id="verdict" class="big"></p>
+    <div class="stats" id="stats"></div>
+    <p id="finalBelief" class="explain"></p>
+    <div class="row" style="margin-top:14px"><button id="again" class="primary">Jugar otra vez</button></div>
+  </section>
+</main>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const MODE = { qlearning: "Agente Q-learning", best_response: "Mejor respuesta" };
+  const state = { total: 30, human: [], ai: [], scores: { human: 0, ai: 0 }, busy: false, last: null };
+
+  $("rounds").addEventListener("input", (e) => { $("roundsOut").textContent = e.target.value; });
+  $("start").addEventListener("click", start);
+  $("again").addEventListener("click", () => { show("summary", false); show("setup", true); show("game", false); });
+  $("btnC").addEventListener("click", () => move("C"));
+  $("btnD").addEventListener("click", () => move("D"));
+  document.addEventListener("keydown", (e) => {
+    if ($("game").classList.contains("hidden") || e.ctrlKey || e.metaKey || e.altKey) return;
+    const k = e.key.toUpperCase();
+    if (k === "C" || k === "D") move(k);
+  });
+
+  function show(id, on) { $(id).classList.toggle("hidden", !on); }
+  function pill(a) { return `<span class="pill ${a}">${a}</span>`; }
+  function pct(p) { return `${(p * 100).toFixed(p < 0.1 ? 1 : 0)} %`; }
+  function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+  function start() {
+    state.total = Number($("rounds").value);
+    state.human = []; state.ai = []; state.scores = { human: 0, ai: 0 }; state.last = null;
+    $("historyBody").innerHTML = "";
+    show("historyTable", false); show("historyEmpty", true);
+    $("beliefList").innerHTML = '<li class="empty">La IA necesita ver al menos 5 rondas para opinar.</li>';
+    $("beliefN").textContent = "";
+    $("mode").textContent = "Sin decidir";
+    $("explain").textContent = "Elige tu primera jugada.";
+    show("setup", false); show("summary", false); show("game", true); show("error", false);
+    render();
+  }
+
+  function render() {
+    $("scoreYou").textContent = state.scores.human;
+    $("scoreAi").textContent = state.scores.ai;
+    const done = state.human.length >= state.total;
+    $("progress").textContent = done ? "Partida terminada"
+      : `Ronda ${state.human.length + 1} de ${state.total}`;
+    $("btnC").disabled = $("btnD").disabled = state.busy || done;
+  }
+
+  function renderBelief(pred, title) {
+    if (!pred) return;
+    $("beliefList").innerHTML = pred.top3.map((t) =>
+      `<li><div class="name"><span>${esc(t.strategy)}</span><b>${pct(t.probability)}</b></div>` +
+      `<div class="bar"><span style="width:${Math.max(2, t.probability * 100)}%"></span></div></li>`).join("");
+    $("beliefN").textContent = title || `Según tus primeras ${pred.n} rondas.`;
+  }
+
+  async function post(url, body) {
+    const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    if (!r.ok) throw new Error(`Error ${r.status} en ${url}`);
+    return r.json();
+  }
+
+  async function move(m) {
+    if (state.busy || state.human.length >= state.total) return;
+    state.busy = true; render(); show("error", false);
+    try {
+      const res = await post("/play", { human_history: state.human, ai_history: state.ai, human_move: m });
+      state.human.push(res.human_move); state.ai.push(res.ai_move);
+      state.scores = res.scores; state.last = res;
+      const row = document.createElement("tr");
+      row.innerHTML = `<td>${res.round}</td><td>${pill(res.human_move)}</td><td>${pill(res.ai_move)}</td>` +
+        `<td>${res.payoffs.human} / ${res.payoffs.ai}</td><td class="mode">${esc(res.strategy_used)}</td>`;
+      $("historyBody").prepend(row);
+      show("historyTable", true); show("historyEmpty", false);
+      $("mode").textContent = MODE[res.mode] || res.mode;
+      $("explain").textContent = res.explanation;
+      renderBelief(res.prediction);
+      if (state.human.length >= state.total) await finish();
+    } catch (err) {
+      $("error").textContent = `No se pudo contactar con la API (${err.message}). Inténtalo de nuevo.`;
+      show("error", true);
+    } finally {
+      state.busy = false; render();
+    }
+  }
+
+  async function finish() {
+    let pred = null;
+    try { pred = await post("/predict", { human: state.human, ai: state.ai }); } catch (e) { /* opcional */ }
+    if (pred) renderBelief(pred, `Con toda la partida (modelo de ${pred.n} rondas).`);
+    const { human, ai } = state.scores;
+    $("verdict").textContent = human > ai ? `Has ganado ${human} a ${ai}.`
+      : human < ai ? `Ha ganado la IA ${ai} a ${human}.` : `Empate a ${human}.`;
+    const rate = (xs) => xs.filter((x) => x === "C").length / xs.length;
+    const mutual = state.human.filter((h, i) => h === "C" && state.ai[i] === "C").length;
+    const stats = [
+      [`${(human / state.total).toFixed(2)}`, "tus puntos por ronda"],
+      [`${(ai / state.total).toFixed(2)}`, "puntos de la IA por ronda"],
+      [pct(rate(state.human)), "de tus jugadas fueron cooperar"],
+      [pct(rate(state.ai)), "de las jugadas de la IA fueron cooperar"],
+      [`${mutual}`, "rondas de cooperación mutua"],
+    ];
+    $("stats").innerHTML = stats.map(([v, l]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join("");
+    $("finalBelief").textContent = pred
+      ? `Veredicto final de la IA: te pareces sobre todo a ${pred.top3[0].strategy} (${pct(pred.top3[0].probability)}), ` +
+        `seguido de ${pred.top3[1].strategy} y ${pred.top3[2].strategy}.` : "";
+    show("summary", true);
+    $("summary").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+})();
+</script>
+</body>
+</html>

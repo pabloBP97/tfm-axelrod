@@ -1,0 +1,17 @@
+# Todo lo que no hace falta para servir la API
+.git
+.venv
+__pycache__/
+*.py[oc]
+.pytest_cache/
+data/
+mlruns/
+mlflow.db
+models/classifier/
+docs/
+notebooks/
+pipelines/
+scripts/
+tests/
+*.md
+uv.lock
