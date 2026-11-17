@@ -1,0 +1,27 @@
+# Simulador de torneos de Axelrod para ejecución por lotes (Azure Container Instances).
+# Se construye con:  az acr build --registry <acr> --image axelrod-sim:v1 --file Dockerfile.simulate .
+# Ejemplo de ejecución:
+#   python -m tfm_axelrod.simulate --preset full --noise 0.05 --turns 100 200 \
+#       --repetitions 10 --seed 42 --out /tmp/sim --upload-prefix raw_cloud
+# (requiere la variable de entorno AZURE_STORAGE_CONNECTION_STRING para subir).
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+WORKDIR /app
+
+# torch (lo importa axelrod) en su variante solo-CPU: unos cientos de MB en vez de varios GB.
+RUN pip install --index-url https://download.pytorch.org/whl/cpu torch==2.15.0
+COPY requirements-simulate.txt .
+RUN pip install -r requirements-simulate.txt
+
+# Solo el código: sin data/, mlruns/ ni modelos.
+COPY tfm_axelrod/ tfm_axelrod/
+
+RUN useradd --create-home simuser
+USER simuser
+
+# Sin argumentos muestra la ayuda; ACI pasa el comando completo con --command-line.
+CMD ["python", "-m", "tfm_axelrod.simulate", "--help"]

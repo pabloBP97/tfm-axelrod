@@ -249,6 +249,12 @@ def build_parser() -> argparse.ArgumentParser:
                    help="Generaciones de la dinámica evolutiva (solo modo evolutionary)")
     p.add_argument("--batch-matches", type=int, default=200,
                    help="Partidas acumuladas antes de escribir un lote (roundrobin)")
+    p.add_argument("--upload-prefix", default=None,
+                   help="Si se indica, al terminar sube los Parquet generados al data lake "
+                        "bajo este prefijo, manteniendo la estructura de carpetas de --out "
+                        "(requiere AZURE_STORAGE_CONNECTION_STRING y el extra 'azure')")
+    p.add_argument("--upload-filesystem", default="lake",
+                   help="Sistema de ficheros ADLS Gen2 de destino (por defecto: lake)")
     return p
 
 
@@ -258,6 +264,17 @@ def main(argv: list[str] | None = None) -> None:
         if not 0.0 <= n <= 1.0:
             raise SystemExit(f"--noise fuera de [0, 1]: {n}")
     strategies = get_strategies(args.preset)
+
+    fs_client = None
+    if args.upload_prefix is not None:
+        from tfm_axelrod.cloud import UploadError, check_filesystem, get_filesystem_client
+
+        # Falla antes de simular si falta configuración o no hay acceso al lake.
+        try:
+            fs_client = get_filesystem_client(args.upload_filesystem)
+            check_filesystem(fs_client)
+        except UploadError as exc:
+            raise SystemExit(f"ERROR: {exc}") from exc
 
     if args.mode == "roundrobin":
         tid, rows = run_roundrobin(
@@ -274,7 +291,22 @@ def main(argv: list[str] | None = None) -> None:
         )
         where = Path(args.out) / "evolutionary"
 
-    print(f"tournament_id={tid} filas={rows} salida={where}")
+    print(f"tournament_id={tid} filas={rows} salida={where}", flush=True)
+
+    if fs_client is not None:
+        from tfm_axelrod.cloud import UploadError, upload_files
+
+        files = sorted(where.rglob(f"{tid}.parquet"))
+        expected = len(args.noise) * len(args.turns) if args.mode == "roundrobin" else 1
+        if len(files) != expected:
+            raise SystemExit(f"ERROR: se esperaban {expected} ficheros Parquet y hay {len(files)}")
+        print(f"Subiendo {len(files)} ficheros a {args.upload_filesystem}/"
+              f"{args.upload_prefix.strip('/')}/ ...", flush=True)
+        try:
+            uploaded = upload_files(files, args.out, args.upload_prefix, fs_client)
+        except UploadError as exc:
+            raise SystemExit(f"ERROR: {exc}") from exc
+        print(f"RESUMEN filas={rows} ficheros_subidos={len(uploaded)}", flush=True)
 
 
 if __name__ == "__main__":

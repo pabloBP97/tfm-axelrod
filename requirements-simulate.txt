@@ -1,0 +1,24 @@
+# Dependencias de la imagen del simulador (Dockerfile.simulate).
+# Versiones fijadas iguales a uv.lock. torch (lo importa axelrod) se instala
+# aparte en su variante solo-CPU; ver Dockerfile.simulate.
+axelrod==4.14.0
+numpy==2.5.5
+pandas==3.1.1
+pyarrow==26.0.1
+# Dependencias de axelrod
+cloudpickle==3.1.2
+dask==2026.8.0
+fsspec==2026.9.0
+matplotlib==3.11.2
+pyyaml==6.0.3
+scipy==1.18.1
+toolz==1.2.0
+tqdm==4.70.1
+# Subida al data lake (extra "azure" de pyproject.toml)
+azure-storage-file-datalake==12.26.1
+azure-storage-blob==12.31.1
+azure-core==1.41.0
+isodate==0.7.2
+cryptography==50.0.2
+requests==2.34.2
+typing-extensions==4.16.0

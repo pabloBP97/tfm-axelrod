@@ -17,6 +17,11 @@ dependencies = [
     "uvicorn>=0.54.0",
 ]
 
+[project.optional-dependencies]
+azure = [
+    "azure-storage-file-datalake>=12.26.1",
+]
+
 [dependency-groups]
 dev = [
     "httpx>=0.28.1",
