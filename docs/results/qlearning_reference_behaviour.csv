@@ -1,0 +1,9 @@
+strategy,noise,coop_rate,defects_first_pct,p_defect_after_opp_defect,p_coop_after_opp_coop
+Tit For Tat,0.0,0.8039,0.0,1.0,1.0
+Win-Stay Lose-Shift,0.0,0.8265,0.0,0.503,0.9118
+Grudger,0.0,0.696,0.0,1.0,0.909
+Defector,0.0,0.0,0.8793,1.0,0.0
+Tit For Tat,0.05,0.4792,0.4034,0.9506,0.9489
+Win-Stay Lose-Shift,0.05,0.5418,0.3966,0.4982,0.5873
+Grudger,0.05,0.0921,0.3414,0.9513,0.182
+Defector,0.05,0.0506,0.831,0.95,0.0521

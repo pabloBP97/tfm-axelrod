@@ -1,0 +1,7 @@
+memory,noise,episodes,final_reward,tournament_score,tournament_rank,coop_rate,defects_first_pct,p_defect_after_opp_defect,p_coop_after_opp_coop,states_visited,states_possible,classifier_top,train_seconds
+1,0.0,50000,2.2674,2.4706,22,1.0,0.0,0.0,1.0,5,5,First by Davis (70%); Cooperator (24%); Tit For 2 Tats (3%),162.4288
+2,0.0,50000,2.4521,2.6525,15,0.9253,0.0,0.5121,1.0,21,21,First by Davis (70%); GTFT (10%); Win-Stay Lose-Shift (7%),168.4188
+3,0.0,50000,2.6346,2.8661,1,0.8992,0.0,0.5036,0.941,85,85,First by Davis (70%); GTFT (12%); Gradual (5%),175.3971
+1,0.05,50000,2.0634,2.1378,15,0.9497,0.3533,0.051,0.9501,5,5,Cooperator (59%); Soft Go By Majority (23%); First by Nydegger (9%),176.7789
+2,0.05,50000,2.0757,2.0868,17,0.6048,0.69,0.4339,0.641,21,21,Random (39%); First by Nydegger (27%); Tit For 2 Tats (13%),183.7328
+3,0.05,50000,2.1968,2.166,6,0.3797,0.67,0.7299,0.5195,85,85,Random (38%); Gradual (12%); First by Nydegger (10%),191.1176

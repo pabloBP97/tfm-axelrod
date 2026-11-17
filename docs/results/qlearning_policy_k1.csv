@@ -1,0 +1,7 @@
+policy,START,CC,CD,DC,DD,Q_START,Q_CC,Q_CD,Q_DC,Q_DD
+Q-learning (ruido 0),C,C,C,C,D,49.23/36.34,51.32/39.18,45.50/26.34,37.83/26.56,23.34/27.30
+Q-learning (ruido 0.05),C,C,C,C,C,41.56/35.91,38.18/37.70,38.07/29.82,35.02/29.72,33.18/24.04
+Tit For Tat,C,C,D,C,D,,,,,
+Win-Stay Lose-Shift,C,C,D,D,C,,,,,
+Grudger,C,C,D,D,D,,,,,
+Defector,D,D,D,D,D,,,,,
