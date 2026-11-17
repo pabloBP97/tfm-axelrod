@@ -1,0 +1,119 @@
+{
+  "algorithm": "gradient_boosting",
+  "params": {
+    "max_iter": 300,
+    "learning_rate": 0.1,
+    "max_leaf_nodes": 31,
+    "early_stopping": true,
+    "validation_fraction": 0.1,
+    "n_iter_no_change": 10
+  },
+  "features": [
+    "coop_rate",
+    "opp_coop_rate",
+    "first_move_coop",
+    "avg_payoff",
+    "switch_rate",
+    "max_c_streak",
+    "max_d_streak",
+    "first_defection",
+    "state_entropy",
+    "p_coop_after_cc",
+    "p_coop_after_cd",
+    "p_coop_after_dc",
+    "p_coop_after_dd",
+    "freq_after_cc",
+    "freq_after_cd",
+    "freq_after_dc",
+    "freq_after_dd"
+  ],
+  "classes": [
+    "Adaptive Tit For Tat",
+    "Alternator",
+    "Bully",
+    "Calculator",
+    "Contrite Tit For Tat",
+    "Cooperator",
+    "Defector",
+    "First by Davis",
+    "First by Grofman",
+    "First by Joss",
+    "First by Nydegger",
+    "First by Shubik",
+    "First by Tideman and Chieruzzi",
+    "Forgetful Grudger",
+    "GTFT",
+    "Gradual",
+    "Grudger",
+    "Hard Tit For Tat",
+    "Omega TFT",
+    "Prober",
+    "Random",
+    "Soft Go By Majority",
+    "Soft Grudger",
+    "Suspicious Tit For Tat",
+    "Tit For 2 Tats",
+    "Tit For Tat",
+    "Two Tits For Tat",
+    "Win-Stay Lose-Shift",
+    "ZD-Extort-2",
+    "ZD-GTFT-2"
+  ],
+  "n_values": [
+    5,
+    10,
+    20,
+    30,
+    50,
+    75,
+    100
+  ],
+  "seed": 42,
+  "test_size": 0.2,
+  "split": "GroupShuffleSplit por match_key",
+  "sklearn_version": "1.9.1",
+  "test_metrics": {
+    "5": {
+      "mlflow_run_id": "546c5b2441454383bc96727b2f2438ec",
+      "accuracy": 0.2218,
+      "top3_accuracy": 0.3763,
+      "f1_macro": 0.2083
+    },
+    "10": {
+      "mlflow_run_id": "1a2b9526884444ae82886530ebd7845b",
+      "accuracy": 0.2949,
+      "top3_accuracy": 0.4745,
+      "f1_macro": 0.2952
+    },
+    "20": {
+      "mlflow_run_id": "ca4d90f7b13548eb854bdcf49ded6f9a",
+      "accuracy": 0.3778,
+      "top3_accuracy": 0.5825,
+      "f1_macro": 0.3819
+    },
+    "30": {
+      "mlflow_run_id": "0ea25cf262af40be954a9276fee3ce04",
+      "accuracy": 0.4259,
+      "top3_accuracy": 0.6379,
+      "f1_macro": 0.4295
+    },
+    "50": {
+      "mlflow_run_id": "b6595107d8c543f7a79cfe8a83091066",
+      "accuracy": 0.469,
+      "top3_accuracy": 0.6928,
+      "f1_macro": 0.4744
+    },
+    "75": {
+      "mlflow_run_id": "edcdee6678ac465eacb61f9570248bbf",
+      "accuracy": 0.4942,
+      "top3_accuracy": 0.7233,
+      "f1_macro": 0.5029
+    },
+    "100": {
+      "mlflow_run_id": "e69e41716d134167a42ea2ec8bb2da81",
+      "accuracy": 0.5395,
+      "top3_accuracy": 0.7561,
+      "f1_macro": 0.5488
+    }
+  }
+}

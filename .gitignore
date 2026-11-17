@@ -10,3 +10,7 @@ wheels/
 .venv
 data/
 mlruns/
+mlflow.db
+# Random Forest (~490 MB): se regeneran con `python -m tfm_axelrod.train_classifier`.
+# models/classifier_serving/ (Gradient Boosting, ~17 MB) sí se versiona: lo usa la API.
+models/classifier/
