@@ -1,0 +1,42 @@
+# Pipelines Spark raw -> curated -> analytics para Azure Container Instances.
+# Se construye con:  az acr build --registry <acr> --image axelrod-spark:v1 --file Dockerfile.spark .
+# Ejecución (requiere AZURE_STORAGE_CONNECTION_STRING):
+#   python -m tfm_axelrod.spark_pipelines --from-lake --filesystem lake
+#
+# Spark 4.2.1 (el más cercano al 4.2 usado en Databricks) en modo local sobre
+# Java 21 (soportado por Spark 4.x), dimensionado para 2 vCPU y 8 GB.
+FROM python:3.12-slim-trixie
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+# JRE sin interfaz gráfica; procps aporta 'ps', que usan los scripts de Spark.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends openjdk-21-jre-headless procps \
+    && rm -rf /var/lib/apt/lists/*
+ENV JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+
+WORKDIR /app
+COPY requirements-spark.txt .
+RUN pip install -r requirements-spark.txt
+
+# Solo el código: sin data/, mlruns/ ni modelos.
+COPY tfm_axelrod/ tfm_axelrod/
+
+# Memoria para un contenedor de 2 vCPU y 8 GB. En modo local el driver hace de
+# ejecutor: 5 GB de heap para Spark y ~3 GB para la JVM fuera del heap,
+# Python y el sistema. Las ventanas de 11 M de filas desbordan a disco en
+# SPARK_LOCAL_DIRS si no caben. 16 particiones de shuffle (en vez de 200)
+# para 2 núcleos; AQE las ajusta en cada etapa.
+ENV PYSPARK_PYTHON=python3 \
+    SPARK_MASTER=local[2] \
+    SPARK_DRIVER_MEMORY=5g \
+    SPARK_SHUFFLE_PARTITIONS=16 \
+    SPARK_LOCAL_DIRS=/tmp/spark
+
+RUN useradd --create-home sparkuser
+USER sparkuser
+
+# Sin argumentos muestra la ayuda; ACI pasa el comando completo con --command-line.
+CMD ["python", "-m", "tfm_axelrod.spark_pipelines", "--help"]

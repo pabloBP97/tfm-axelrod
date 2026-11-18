@@ -1,0 +1,14 @@
+# Dependencias de la imagen de los pipelines Spark (Dockerfile.spark).
+# Versiones fijadas iguales a uv.lock (extras "spark" y "azure").
+# Solo lo que usa tfm_axelrod.spark_pipelines con E/S nativa de Spark:
+# no hace falta axelrod, pandas ni pyarrow.
+pyspark==4.2.1
+py4j==0.10.9.9
+# Descarga y subida al data lake (extra "azure" de pyproject.toml)
+azure-storage-file-datalake==12.26.1
+azure-storage-blob==12.31.1
+azure-core==1.41.0
+isodate==0.7.2
+cryptography==50.0.2
+requests==2.34.2
+typing-extensions==4.16.0

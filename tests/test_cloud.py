@@ -140,6 +140,65 @@ def test_cli_exit_code_is_nonzero(tmp_path):
     assert r.returncode != 0 and cloud.CONN_ENV in r.stderr
 
 
+class _P:
+    def __init__(self, name, is_directory=False):
+        self.name, self.is_directory = name, is_directory
+
+
+class FakeLakeForDownload:
+    file_system_name = "lake"
+
+    def __init__(self, files, fail_listing=False):
+        self.files, self.fail_listing, self.deleted = dict(files), fail_listing, []
+
+    def get_paths(self, path, recursive=True):
+        if self.fail_listing:
+            raise IOError("ResourceNotFound")
+        return [_P(path, True)] + [_P(n) for n in self.files if n.startswith(path + "/")]
+
+    def get_file_client(self, path):
+        data = self.files[path]
+
+        class _Dl:
+            def readinto(self, fh):
+                fh.write(data)
+
+        class _F:
+            def download_file(self):
+                return _Dl()
+        return _F()
+
+    def get_directory_client(self, path):
+        lake = self
+
+        class _D:
+            def exists(self):
+                return any(n.startswith(path + "/") for n in lake.files)
+
+            def delete_directory(self):
+                lake.deleted.append(path)
+        return _D()
+
+
+def test_download_prefix_keeps_structure_and_skips_other_prefixes(tmp_path):
+    lake = FakeLakeForDownload({
+        "raw/roundrobin/a.parquet": b"a", "raw/roundrobin/sub/b.parquet": b"bb",
+        "raw_cloud/roundrobin/a.parquet": b"no", "raw/evolutionary/e.parquet": b"e"})
+    files = cloud.download_prefix(lake, "raw/roundrobin/", tmp_path / "rr")
+    assert sorted(f.relative_to(tmp_path).as_posix() for f in files) == ["rr/a.parquet", "rr/sub/b.parquet"]
+    assert (tmp_path / "rr" / "sub" / "b.parquet").read_bytes() == b"bb"
+
+
+def test_download_and_delete_errors(tmp_path):
+    with pytest.raises(cloud.UploadError, match="No se pudo listar"):
+        cloud.download_prefix(FakeLakeForDownload({}, fail_listing=True), "raw/roundrobin", tmp_path)
+    lake = FakeLakeForDownload({"curated/t/x.parquet": b"x"})
+    assert cloud.delete_directory(lake, "curated/t") and lake.deleted == ["curated/t"]
+    assert not cloud.delete_directory(lake, "curated/otra")
+    with pytest.raises(cloud.UploadError, match="raíz"):
+        cloud.delete_directory(lake, "/")
+
+
 def test_real_sdk_client_builds_offline():
     pytest.importorskip("azure.storage.filedatalake")
     fs = cloud.get_filesystem_client("lake", FAKE_CONN)

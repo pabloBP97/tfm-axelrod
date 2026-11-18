@@ -21,6 +21,9 @@ dependencies = [
 azure = [
     "azure-storage-file-datalake>=12.26.1",
 ]
+spark = [
+    "pyspark==4.2.1",
+]
 
 [dependency-groups]
 dev = [

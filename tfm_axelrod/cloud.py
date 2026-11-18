@@ -73,3 +73,47 @@ def upload_files(files: list[Path], local_root: str | Path, prefix: str, fs_clie
         uploaded.append(dest)
         print(f"  subido {dest} ({size / 1e6:.2f} MB)", flush=True)
     return uploaded
+
+
+def list_files(fs_client, prefix: str) -> list[str]:
+    """Rutas de los ficheros (no carpetas) bajo ``prefix``, recursivamente."""
+    prefix = prefix.strip("/")
+    try:
+        return sorted(p.name for p in fs_client.get_paths(path=prefix, recursive=True)
+                      if not p.is_directory)
+    except Exception as exc:
+        raise UploadError(f"No se pudo listar {fs_client.file_system_name}/{prefix}: "
+                          f"{type(exc).__name__}: {exc}") from exc
+
+
+def download_prefix(fs_client, prefix: str, local_dir: str | Path) -> list[Path]:
+    """Descarga todo lo que hay bajo ``prefix`` en ``local_dir``, manteniendo la estructura."""
+    prefix = prefix.strip("/")
+    local_dir = Path(local_dir)
+    out = []
+    for name in list_files(fs_client, prefix):
+        dest = local_dir / name[len(prefix):].lstrip("/")
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            with open(dest, "wb") as fh:
+                fs_client.get_file_client(name).download_file().readinto(fh)
+        except Exception as exc:
+            raise UploadError(f"Fallo al descargar {name}: {type(exc).__name__}: {exc}") from exc
+        out.append(dest)
+    return out
+
+
+def delete_directory(fs_client, path: str) -> bool:
+    """Borra la carpeta ``path`` del lake si existe. Devuelve si existía."""
+    path = path.strip("/")
+    if not path:
+        raise UploadError("Se ha intentado borrar la raíz del sistema de ficheros")
+    try:
+        directory = fs_client.get_directory_client(path)
+        if not directory.exists():
+            return False
+        directory.delete_directory()
+    except Exception as exc:
+        raise UploadError(f"No se pudo borrar {path}: {type(exc).__name__}: {exc}") from exc
+    print(f"  borrada la versión anterior de {path}/", flush=True)
+    return True
